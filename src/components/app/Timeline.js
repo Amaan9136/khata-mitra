@@ -11,7 +11,8 @@ export default function Timeline({ history }) {
     if (!h.note) return "";
     if (h.action === "doc_added" || h.action === "ai_extract") { const [k, ...rest] = h.note.split(" · "); return [t(`doc.${k}`), ...rest].join(" · "); }
     if (h.action === "ai_reason") return t(`dec.${h.note}`);
-    if (h.action === "ai_crosscheck" || h.action === "ai_checklist") return h.note;
+    if (h.action === "ai_crosscheck") return t("hist.found", { n: h.note });
+    if (h.action === "ai_checklist") return t("hist.items", { n: h.note });
     return h.note;
   };
   return (

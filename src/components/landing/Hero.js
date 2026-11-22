@@ -22,10 +22,6 @@ export default function Hero() {
         <Scene3D />
       </motion.div>
       <motion.div style={{ y, opacity: fade }} className="relative z-10 mx-auto flex w-full max-w-[76rem] flex-col justify-center px-5 pb-4 pt-28 sm:px-8 lg:pointer-events-none lg:min-h-dvh lg:pb-20 lg:pt-28">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-teal-300/25 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-teal-200 backdrop-blur">
-          <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-lime-300" /><span className="relative inline-flex h-2 w-2 rounded-full bg-lime-300" /></span>
-          {t("landing.eyebrow")}
-        </motion.div>
         <h1 key={lang} className="max-w-3xl font-display text-5xl font-semibold text-white sm:text-6xl lg:max-w-none lg:whitespace-nowrap lg:text-[clamp(2.5rem,4.1vw,4.25rem)]">
           {words.map((w, i) => (
             <Fragment key={i}>

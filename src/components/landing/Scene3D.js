@@ -3,7 +3,34 @@ import { useMemo, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
 import * as THREE from "three";
-function docTexture() {
+const V = [[-1.65, -1.5], [-0.55, -1.6], [0.6, -1.45], [1.7, -1.55], [-1.55, -0.5], [-0.45, -0.6], [0.55, -0.4], [1.6, -0.55], [-1.7, 0.55], [-0.5, 0.45], [0.45, 0.6], [1.65, 0.5], [-1.6, 1.6], [-0.6, 1.5], [0.5, 1.65], [1.7, 1.55]];
+const LABELS = ["44", "45/1", "45/3", "46", "45/2", "47", "48/1", "48/2", "49"];
+const HEIGHTS = [0.05, 0.08, 0.05, 0.07, 0.16, 0.08, 0.06, 0.05, 0.07];
+const COLORS = ["#2dd4bf", "#0f6857", "#5eead4", "#0a4a3d"];
+const HOT = 4;
+const PLOTS = LABELS.map((label, i) => {
+  const r = Math.floor(i / 3);
+  const c = i % 3;
+  const q = [V[r * 4 + c], V[r * 4 + c + 1], V[(r + 1) * 4 + c + 1], V[(r + 1) * 4 + c]];
+  const cx = q.reduce((s, p) => s + p[0], 0) / 4;
+  const cy = q.reduce((s, p) => s + p[1], 0) / 4;
+  return { label, h: HEIGHTS[i], cx, cy, pts: q.map(([x, y]) => [x + (cx - x) * 0.07, y + (cy - y) * 0.07]) };
+});
+function labelTexture(text, hot) {
+  const c = document.createElement("canvas");
+  c.width = 160;
+  c.height = 80;
+  const g = c.getContext("2d");
+  g.fillStyle = hot ? "#052e2b" : "#ecfdf5";
+  g.font = "700 40px sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText(text, 80, 42);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function cardTexture() {
   const c = document.createElement("canvas");
   c.width = 256;
   c.height = 320;
@@ -11,109 +38,123 @@ function docTexture() {
   g.fillStyle = "#ecfdf5";
   g.fillRect(0, 0, 256, 320);
   g.fillStyle = "#0f6857";
-  g.fillRect(0, 0, 256, 44);
-  g.fillStyle = "#bef264";
-  g.fillRect(18, 16, 70, 12);
-  g.fillStyle = "#b6cfc8";
-  [74, 100, 126, 152, 178].forEach((y, i) => g.fillRect(24, y, i % 2 ? 150 : 208, 9));
+  g.fillRect(0, 0, 256, 48);
+  g.textBaseline = "middle";
+  g.fillStyle = "#ecfdf5";
+  g.font = "700 20px sans-serif";
+  g.fillText("KHATA MUTATION", 18, 25);
+  g.fillStyle = "#476560";
+  g.font = "600 17px sans-serif";
+  g.fillText("Sy.No 45/2 · Kolathur", 18, 78);
+  g.fillStyle = "#7a948f";
+  g.font = "500 24px sans-serif";
+  g.fillText("Muniyappa", 18, 122);
+  g.fillRect(18, 122, g.measureText("Muniyappa").width, 2);
   g.strokeStyle = "#0f6857";
-  g.lineWidth = 3;
-  g.strokeRect(24, 206, 90, 70);
-  g.beginPath();
-  g.moveTo(24, 241);
-  g.lineTo(114, 241);
-  g.moveTo(69, 206);
-  g.lineTo(69, 276);
-  g.stroke();
-  g.fillStyle = "#bef264";
-  g.beginPath();
-  g.arc(190, 250, 34, 0, Math.PI * 2);
-  g.fill();
-  g.strokeStyle = "#052e2b";
-  g.lineWidth = 8;
+  g.lineWidth = 4;
   g.lineCap = "round";
   g.lineJoin = "round";
   g.beginPath();
-  g.moveTo(173, 250);
-  g.lineTo(186, 263);
-  g.lineTo(208, 236);
+  g.moveTo(40, 144);
+  g.lineTo(40, 168);
+  g.moveTo(32, 160);
+  g.lineTo(40, 168);
+  g.lineTo(48, 160);
+  g.stroke();
+  g.fillStyle = "#052e2b";
+  g.font = "700 28px sans-serif";
+  g.fillText("Ramesh K", 18, 196);
+  [0, 1, 2, 3].forEach((i) => {
+    g.fillStyle = i < 3 ? "#2dd4bf" : "#b6cfc8";
+    g.fillRect(18 + i * 56, 240, 48, 10);
+  });
+  g.fillStyle = "#476560";
+  g.font = "600 15px sans-serif";
+  g.fillText("Step 3 of 4", 18, 272);
+  g.fillStyle = "#bef264";
+  g.beginPath();
+  g.arc(200, 280, 28, 0, Math.PI * 2);
+  g.fill();
+  g.strokeStyle = "#052e2b";
+  g.lineWidth = 7;
+  g.beginPath();
+  g.moveTo(186, 280);
+  g.lineTo(196, 290);
+  g.lineTo(214, 268);
   g.stroke();
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
-const HEIGHTS = [0.22, 0.34, 0.18, 0.3, 0.2, 0.38, 0.16, 0.28, 0.24];
-const COLORS = ["#2dd4bf", "#0f6857", "#5eead4", "#0a4a3d"];
-function Parcels() {
-  const group = useRef();
-  const pulse = useRef();
-  const vel = useRef(0);
-  const drag = useRef(false);
-  const hover = useRef(false);
-  useFrame((st, d) => {
-    if (!drag.current) group.current.rotation.y += d * (hover.current ? 0.1 : 0.3) + vel.current * d;
-    vel.current *= Math.exp(-d * 2.5);
-    pulse.current.material.emissiveIntensity = 0.5 + Math.sin(st.clock.elapsedTime * 2.4) * 0.35;
-  });
-  return (
-    <group
-      ref={group}
-      rotation={[0.55, 0.4, 0]}
-      onPointerOver={(e) => { e.stopPropagation(); hover.current = true; document.body.style.cursor = "grab"; }}
-      onPointerOut={() => { hover.current = false; drag.current = false; document.body.style.cursor = ""; }}
-      onPointerDown={(e) => { e.stopPropagation(); drag.current = true; e.target.setPointerCapture(e.pointerId); document.body.style.cursor = "grabbing"; }}
-      onPointerMove={(e) => { if (!drag.current) return; const dx = e.nativeEvent.movementX * 0.012; group.current.rotation.y += dx; vel.current = THREE.MathUtils.clamp(dx / 0.016, -8, 8); }}
-      onPointerUp={(e) => { drag.current = false; e.target.releasePointerCapture(e.pointerId); document.body.style.cursor = "grab"; }}
-    >
-      {HEIGHTS.map((h, i) => {
-        const x = (i % 3) - 1;
-        const z = Math.floor(i / 3) - 1;
-        const hot = i === 5;
-        return (
-          <mesh key={i} ref={hot ? pulse : undefined} position={[x * 1.05, h / 2, z * 1.05]}>
-            <boxGeometry args={[0.95, hot ? 0.5 : h, 0.95]} />
-            <meshStandardMaterial color={hot ? "#bef264" : COLORS[i % 4]} emissive={hot ? "#bef264" : "#000000"} emissiveIntensity={hot ? 0.6 : 0} roughness={0.45} metalness={0.1} transparent opacity={hot ? 1 : 0.85} />
-          </mesh>
-        );
-      })}
-      <mesh position={[0, -0.02, 0]}>
-        <boxGeometry args={[3.4, 0.04, 3.4]} />
-        <meshStandardMaterial color="#052e2b" roughness={0.7} />
-      </mesh>
-    </group>
-  );
-}
-function Doc() {
-  const tex = useMemo(() => docTexture(), []);
-  return (
-    <Float speed={1.6} rotationIntensity={0.35} floatIntensity={1.2}>
-      <mesh position={[0, 1.55, 0.4]} rotation={[-0.15, 0, 0.06]}>
-        <planeGeometry args={[1.3, 1.62]} />
-        <meshBasicMaterial map={tex} side={THREE.DoubleSide} />
-      </mesh>
-    </Float>
-  );
-}
-function Orbit({ radius, speed, tilt, color }) {
+function Plot({ p, i, hot }) {
   const ref = useRef();
-  const dot = useRef();
+  const geo = useMemo(() => {
+    const s = new THREE.Shape();
+    p.pts.forEach(([x, y], n) => (n ? s.lineTo(x, y) : s.moveTo(x, y)));
+    return new THREE.ExtrudeGeometry(s, { depth: p.h, bevelEnabled: false });
+  }, [p]);
+  const tex = useMemo(() => labelTexture(p.label, hot), [p, hot]);
   useFrame((st) => {
-    const t = st.clock.elapsedTime * speed;
-    ref.current.rotation.z += 0.0015;
-    dot.current.position.set(Math.cos(t) * radius, Math.sin(t) * radius, 0);
+    if (hot) ref.current.material.emissiveIntensity = 0.45 + Math.sin(st.clock.elapsedTime * 2.4) * 0.3;
   });
   return (
-    <group rotation={[tilt, 0.3, 0]}>
-      <group ref={ref}>
-        <mesh>
-          <torusGeometry args={[radius, 0.008, 8, 128]} />
-          <meshBasicMaterial color={color} transparent opacity={0.45} />
-        </mesh>
-      </group>
-      <mesh ref={dot}>
-        <sphereGeometry args={[0.07, 16, 16]} />
-        <meshBasicMaterial color={color} />
+    <>
+      <mesh ref={ref} geometry={geo}>
+        <meshStandardMaterial color={hot ? "#bef264" : COLORS[i % 4]} emissive={hot ? "#bef264" : "#000000"} emissiveIntensity={hot ? 0.5 : 0} roughness={0.5} metalness={0.1} />
       </mesh>
+      <mesh position={[p.cx, p.cy, p.h + 0.006]}>
+        <planeGeometry args={[0.7, 0.35]} />
+        <meshBasicMaterial map={tex} transparent opacity={hot ? 1 : 0.8} />
+      </mesh>
+    </>
+  );
+}
+function Cadastre() {
+  const group = useRef();
+  const ring = useRef();
+  const drag = useRef(false);
+  const off = useRef(0);
+  const tex = useMemo(() => cardTexture(), []);
+  const hot = PLOTS[HOT];
+  useFrame((st, d) => {
+    if (!drag.current) off.current *= Math.exp(-d * 1.5);
+    group.current.rotation.y = 0.5 + off.current + Math.sin(st.clock.elapsedTime * 0.35) * 0.15;
+    const ph = (st.clock.elapsedTime * 0.8) % 1;
+    ring.current.scale.setScalar(1 + ph * 0.7);
+    ring.current.material.opacity = 0.9 * (1 - ph);
+  });
+  return (
+    <group rotation={[0.8, 0, 0]}>
+      <group
+        ref={group}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = "grab"; }}
+        onPointerOut={() => { drag.current = false; document.body.style.cursor = ""; }}
+        onPointerDown={(e) => { e.stopPropagation(); drag.current = true; e.target.setPointerCapture(e.pointerId); document.body.style.cursor = "grabbing"; }}
+        onPointerMove={(e) => { if (drag.current) off.current = THREE.MathUtils.clamp(off.current + e.nativeEvent.movementX * 0.01, -1.1, 1.1); }}
+        onPointerUp={(e) => { drag.current = false; e.target.releasePointerCapture(e.pointerId); document.body.style.cursor = "grab"; }}
+      >
+        <mesh position={[0, -0.04, 0]}>
+          <boxGeometry args={[4.1, 0.08, 4.1]} />
+          <meshStandardMaterial color="#052e2b" roughness={0.7} />
+        </mesh>
+        <group rotation={[-Math.PI / 2, 0, 0]}>
+          {PLOTS.map((p, i) => <Plot key={p.label} p={p} i={i} hot={i === HOT} />)}
+        </group>
+        <mesh ref={ring} position={[hot.cx, hot.h + 0.02, -hot.cy]} rotation={[-Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.3, 0.02, 8, 48]} />
+          <meshBasicMaterial color="#bef264" transparent />
+        </mesh>
+        <mesh position={[hot.cx, 0.9, -hot.cy]}>
+          <cylinderGeometry args={[0.012, 0.012, 1.6, 8]} />
+          <meshBasicMaterial color="#bef264" />
+        </mesh>
+        <Float speed={1.6} rotationIntensity={0.1} floatIntensity={0.8}>
+          <mesh position={[hot.cx, 2, -hot.cy]} rotation={[-0.8, 0, 0]}>
+            <planeGeometry args={[1, 1.25]} />
+            <meshBasicMaterial map={tex} side={THREE.DoubleSide} />
+          </mesh>
+        </Float>
+      </group>
     </group>
   );
 }
@@ -138,23 +179,6 @@ function Particles({ count }) {
     </points>
   );
 }
-function Leaf({ position, rotation, scale = 1 }) {
-  const shape = useMemo(() => {
-    const s = new THREE.Shape();
-    s.moveTo(0, 0);
-    s.quadraticCurveTo(0.45, 0.3, 0, 1);
-    s.quadraticCurveTo(-0.45, 0.3, 0, 0);
-    return s;
-  }, []);
-  return (
-    <Float speed={1.6} rotationIntensity={1.2} floatIntensity={1.6}>
-      <mesh position={position} rotation={rotation} scale={scale}>
-        <shapeGeometry args={[shape]} />
-        <meshStandardMaterial color="#84cc16" side={THREE.DoubleSide} roughness={0.5} />
-      </mesh>
-    </Float>
-  );
-}
 export default function Scene3D() {
   const [small, setSmall] = useState(false);
   useEffect(() => {
@@ -170,16 +194,9 @@ export default function Scene3D() {
       <pointLight position={[-4, -2, 2]} intensity={14} color="#2dd4bf" />
       <pointLight position={[3, 2, -3]} intensity={10} color="#bef264" />
       <group scale={small ? 0.8 : 1} position={[0, -0.5, 0]}>
-        <Parcels />
-        <Doc />
+        <Cadastre />
       </group>
-      <Orbit radius={2.4} speed={0.8} tilt={1.1} color="#5eead4" />
-      <Orbit radius={3} speed={-0.55} tilt={-0.7} color="#bef264" />
-      {!small && <Orbit radius={3.6} speed={0.35} tilt={0.3} color="#2dd4bf" />}
       <Particles count={small ? 90 : 220} />
-      <Leaf position={[-2.8, 1.2, 0.5]} rotation={[0, 0, 0.6]} scale={0.7} />
-      <Leaf position={[2.8, -1.3, 0.4]} rotation={[0, 0, -2.4]} scale={0.55} />
-      {!small && <Leaf position={[2.5, 1.8, -0.5]} rotation={[0, 0, -0.5]} scale={0.45} />}
     </Canvas>
   );
 }

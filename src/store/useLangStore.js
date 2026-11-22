@@ -13,7 +13,9 @@ export const useLangStore = create((set) => ({
     set({ lang });
   }
 }));
+const t = (key, vars) => translate(useLangStore.getState().lang, key, vars);
+const te = (code) => (t(`err.${code}`) === `err.${code}` ? t("errGeneric") : t(`err.${code}`));
 export function useT() {
   const lang = useLangStore((s) => s.lang);
-  return { lang, t: (key, vars) => translate(lang, key, vars), te: (code) => (translate(lang, `err.${code}`) === `err.${code}` ? translate(lang, "errGeneric") : translate(lang, `err.${code}`)) };
+  return { lang, t, te };
 }

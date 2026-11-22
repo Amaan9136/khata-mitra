@@ -143,6 +143,7 @@ Fill in `.env`:
 | `GROQ_TEXT_MODEL`, `GROQ_VISION_MODEL` | Optional, defaults are in `.env.example` |
 | `SEED_SECRET` | Any long random string, used once to load the demo data |
 | `GROQ_BASE_URL` | Optional, only if you want to point at a different OpenAI-compatible server |
+| `MONGODB_DNS_SERVERS` | Optional, comma separated DNS servers, only needed if `mongodb+srv` lookups fail |
 
 Start it and load the demo data:
 
@@ -156,6 +157,10 @@ Open `http://localhost:3000`. The seed creates the two officers above and ten ap
 ```bash
 npm test
 ```
+
+### If the database connection fails with `querySrv ECONNREFUSED`
+
+This is a DNS problem on your machine or network, not an Atlas setting. Node can't resolve the `mongodb+srv://` address even though Compass can. The app now retries once using public DNS (8.8.8.8 and 1.1.1.1). If it still fails, either set `MONGODB_DNS_SERVERS` in `.env` to a resolver that works for you, or in Atlas choose Connect, Drivers, and copy the older non-SRV string that starts with `mongodb://` and lists the three shard hosts.
 
 ## Deploy on Vercel
 
