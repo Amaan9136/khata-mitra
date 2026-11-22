@@ -7,3 +7,4 @@ node_modules
 repomix-output.md
 .vercel
 .env*
+!.env.example
