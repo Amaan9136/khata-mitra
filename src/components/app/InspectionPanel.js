@@ -32,7 +32,13 @@ export default function InspectionPanel({ app, ai, readOnly, onApp }) {
     if (!(await save("inspection", data, false, true))) return;
     ai.run("checklist");
   };
-  const locate = () => navigator.geolocation?.getCurrentPosition((p) => setLocation({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) }), () => toast.error(t("ins.locationFail")), { enableHighAccuracy: true, timeout: 12000 }) ?? toast.error(t("ins.locationFail"));
+  const locate = () => {
+    const geo = navigator.geolocation;
+    const ok = (p) => setLocation({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) });
+    const fail = () => toast.error(t("ins.locationFail"));
+    if (!geo) return fail();
+    geo.getCurrentPosition(ok, (e) => (e.code === 1 ? fail() : geo.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })), { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+  };
   return (
     <div className="card p-5">
       <div className="mb-1 flex flex-wrap items-center gap-3"><h2 className="font-display text-xl font-semibold">{t("ins.title")}</h2><AiBadge /></div>
