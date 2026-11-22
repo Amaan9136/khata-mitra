@@ -13,7 +13,7 @@ export const metadata = {
 export const viewport = { themeColor: "#052e2b", width: "device-width", initialScale: 1 };
 export default function RootLayout({ children }) {
   return (
-    <html lang="kn" suppressHydrationWarning className={`${displayEn.variable} ${bodyEn.variable} ${bodyKn.variable} ${displayKn.variable}`}>
+    <html lang="kn" data-scroll-behavior="smooth" suppressHydrationWarning className={`${displayEn.variable} ${bodyEn.variable} ${bodyKn.variable} ${displayKn.variable}`}>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
