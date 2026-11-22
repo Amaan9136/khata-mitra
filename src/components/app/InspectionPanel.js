@@ -34,10 +34,13 @@ export default function InspectionPanel({ app, ai, readOnly, onApp }) {
   };
   const locate = () => {
     const geo = navigator.geolocation;
-    const ok = (p) => setLocation({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) });
-    const fail = () => toast.error(t("ins.locationFail"));
-    if (!geo) return fail();
-    geo.getCurrentPosition(ok, (e) => (e.code === 1 ? fail() : geo.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 })), { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 });
+    let best = Infinity;
+    let left = 2;
+    const ok = (p) => p.coords.accuracy < best && (best = p.coords.accuracy, setLocation({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) }));
+    const fail = () => --left || toast.error(t("ins.locationFail"));
+    if (!geo) return toast.error(t("ins.locationFail"));
+    geo.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 });
+    geo.getCurrentPosition(ok, fail, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
   };
   return (
     <div className="card p-5">
