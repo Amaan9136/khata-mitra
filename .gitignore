@@ -5,3 +5,5 @@ node_modules
 .vercel
 *.log
 repomix-output.md
+.vercel
+.env*
