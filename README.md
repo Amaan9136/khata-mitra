@@ -2,7 +2,7 @@
 
 A small workflow tool for the revenue officers who process khata mutation applications in Karnataka, in Kannada first, with an English switch. One Next.js app, deployed on Vercel, MongoDB for data, Groq for the AI help.
 
-**Live link:** `<Once deployed, i will add Vercel URL here>`
+**Live link:** `https://khata-mitra.vercel.app`
 
 **Test logins** (both have the same access, two accounts so the history shows different people):
 
@@ -137,7 +137,7 @@ Fill in `.env`:
 | Variable | What it is |
 |---|---|
 | `MONGODB_URI` | Your MongoDB connection string |
-| `NEXTAUTH_URL` | `http://localhost:3000` locally, Vercel URL when deployed |
+| `NEXTAUTH_URL` | `https://khata-mitra.vercel.app` locally, Vercel URL when deployed |
 | `NEXTAUTH_SECRET` | Any long random string (`openssl rand -base64 32`) |
 | `GROQ_API_KEY` | From console.groq.com |
 | `GROQ_TEXT_MODEL`, `GROQ_VISION_MODEL` | Optional, defaults are in `.env.example` |
@@ -149,10 +149,10 @@ Start it and load the demo data:
 
 ```bash
 npm run dev
-curl -X POST http://localhost:3000/api/seed -H "x-seed-secret: <your SEED_SECRET>"
+curl -X POST https://khata-mitra.vercel.app/api/seed -H "x-seed-secret: <your SEED_SECRET>"
 ```
 
-Open `http://localhost:3000`. The seed creates the two officers above and ten applications in different states: one overdue with a survey number mismatch, one missing a document, one with an objection at the inspection step, one ready for a decision, one returned, one approved, one rejected. The seed route wipes users and applications first, so don't run it against data you care about. Run it again any time to reset the demo.
+Open `https://khata-mitra.vercel.app`. The seed creates the two officers above and ten applications in different states: one overdue with a survey number mismatch, one missing a document, one with an objection at the inspection step, one ready for a decision, one returned, one approved, one rejected. The seed route wipes users and applications first, so don't run it against data you care about. Run it again any time to reset the demo.
 
 ```bash
 npm test
